@@ -48,7 +48,7 @@ module TwistedCaldav
     end
 
     def find_events(data)
-      result = ''
+      result = []
       events = []
       res = nil
       __create_http.start do |http|
@@ -67,16 +67,18 @@ module TwistedCaldav
       errorhandling res
       xml = REXML::Document.new(res.body)
       REXML::XPath.each(xml, '//c:calendar-data/', { 'c' => 'urn:ietf:params:xml:ns:caldav' }) { |c| result << c.text }
-      r = Icalendar::Calendar.parse(result)
-      if r.empty?
-        false
-      else
+      result.each do |res|
+        r = Icalendar::Calendar.parse(res)
         r.each do |calendar|
           calendar.events.each do |event|
             events << event
           end
         end
+      end
+      unless events.empty?
         events
+      else
+        return false
       end
     end
 
